@@ -1,0 +1,31 @@
+name: Update 6n5v Host
+
+on:
+  schedule:
+    # 每 6 小时跑一次（UTC 时间，对应北京时间 0:00, 6:00, 12:00, 18:00）
+    - cron: '0 */6 * * *'
+  workflow_dispatch:   # 支持手动触发
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run fetch
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+        run: python fetch_host.py
