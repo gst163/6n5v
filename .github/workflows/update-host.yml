@@ -9,7 +9,7 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -17,6 +17,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      # ============ 网络测试（诊断用，网络通了就可以删掉）============
+      - name: Test network
+        run: |
+          echo "=== 测试 k34h ==="
+          curl -v -m 10 http://k34h.com/enter/index.html || echo "k34h 挂了"
+          echo ""
+          echo "=== 测试 ccca ==="
+          curl -v -m 10 "http://ccca.jxbyte.com:8080/?u=aHR0cDovL2szNGguY29t&p=L2VudGVyL2luZGV4Lmh0bWw=" || echo "ccca 挂了"
+          echo ""
+          echo "=== 测试 gist（对照组）==="
+          curl -v -m 10 https://api.github.com || echo "github api 挂了"
 
       - name: Install deps
         run: |
