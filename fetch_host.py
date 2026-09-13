@@ -5,7 +5,6 @@
 import os
 import re
 import json
-import base64
 import urllib.request
 from playwright.sync_api import sync_playwright
 
@@ -58,13 +57,28 @@ def fetch_via_playwright():
 
         try:
             log(f"打开入口: {K34H_ENTRY}")
-            page.goto(K34H_ENTRY, wait_until="networkidle", timeout=30000)
-            page.wait_for_timeout(5000)   # 等 JS 跳转完成
+            # ★ 用 domcontentloaded，不等 networkidle
+            page.goto(K34H_ENTRY, wait_until="domcontentloaded", timeout=60000)
+            # 等 JS 跳转完成
+            page.wait_for_timeout(3000)
 
             final_url = page.url
             html = page.content()
             log(f"最终 URL: {final_url}")
             log(f"页面长度: {len(html)}")
+
+            # 如果长度太小，可能是空壳，再等一会
+            if len(html) < 500:
+                log("页面太短，再等 5 秒")
+                page.wait_for_timeout(5000)
+                html = page.content()
+                final_url = page.url
+                log(f"重试后 URL: {final_url}")
+                log(f"重试后长度: {len(html)}")
+
+            # 打印前 500 字（诊断用）
+            log(f"页面内容前 500 字:")
+            log(html[:500])
 
             # 抠 var domain
             m = re.search(r"var\s+domain\s*[=:]\s*['\"]([^'\"]+)['\"]", html)
